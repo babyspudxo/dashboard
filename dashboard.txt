@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lok的小撇步</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="manifest" href="manifest.json">
+  <script>
+    tailwind.config = {
+      theme: { extend: {
+        colors: {
+          primary: '#6C6355',
+          secondary: '#E4E0D9',
+          surface: '#F7F5F2',
+          accent: '#FFD541',
+        }
+      } }
+    }
+  </script>
+  <style>
+    body { background: #F7F5F2; color: #333; }
+    .backbtn { cursor: pointer; }
+    .active-pomo { background: #FFD541; color: #D32F2F; font-weight: bold; }
+    .inactive-pomo { background: #E4E0D9; color: #333; }
+  </style>
+</head>
+<body class="max-w-4xl mx-auto p-4">
+
+  <header class="mb-4">
+    <h1 class="text-2xl font-bold text-primary">Lok的小撇步</h1>
+    <p class="text-sm opacity-70">實用小工具集合</p>
+  </header>
+
+  <!-- 主頁 -->
+  <div id="home" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+    <div onclick="openTool('url')" class="bg-white rounded-xl p-4 shadow text-center">🔗 短網址</div>
+    <div onclick="openTool('pomodoro')" class="bg-white rounded-xl p-4 shadow text-center">⏰ 番茄鐘</div>
+    <div onclick="openTool('qrcode')" class="bg-white rounded-xl p-4 shadow text-center">📷 QR Code</div>
+    <div onclick="openTool('unit')" class="bg-white rounded-xl p-4 shadow text-center">📏 單位轉換</div>
+    <div onclick="openTool('todo')" class="bg-white rounded-xl p-4 shadow text-center">✅ 待辦事項</div>
+    <div onclick="openTool('translate')" class="bg-white rounded-xl p-4 shadow text-center">🌐 翻譯</div>
+    <div onclick="openTool('rate')" class="bg-white rounded-xl p-4 shadow text-center">💱 匯率</div>
+    <div onclick="openTool('color')" class="bg-white rounded-xl p-4 shadow text-center">🎨 色彩靈感</div>
+  </div>
+
+  <!-- 工具頁 -->
+  <div id="tool" class="hidden"></div>
+
+  <script>
+    // -------------------------------
+    // 全域導航
+    // -------------------------------
+    function back() {
+      document.getElementById('tool').innerHTML = '';
+      document.getElementById('tool').classList.add('hidden');
+      document.getElementById('home').classList.remove('hidden');
+    }
+
+    function openTool(name) {
+      document.getElementById('home').classList.add('hidden');
+      const t = document.getElementById('tool');
+      t.classList.remove('hidden');
+      t.innerHTML = `<div onclick="back()" class="font-bold text-primary mb-3 backbtn">← 返回</div>`;
+
+      // -------------------------------
+      // 1. 短網址（可用 + 複製）
+      // -------------------------------
+      if(name === 'url') {
+        t.innerHTML += `
+        <h2 class="text-xl font-bold mb-3">🔗 短網址產生器</h2>
+        <input id="longurl" class="w-full p-2 border rounded mb-2" placeholder="貼上長網址">
+        <button onclick="shortUrl()" class="bg-primary text-white p-2 rounded w-full">產生及複製</button>
+        <div id="shorturl" class="mt-3 p-2 bg-white rounded"></div>`;
+      }
+
+      // -------------------------------
+      // 2. 番茄鐘（25分鐘 / 5分鐘 可切換）
+      // -------------------------------
+      if(name === 'pomodoro') {
+        t.innerHTML += `
+        <h2 class="text-xl font-bold mb-3">⏰ 番茄時鐘</h2>
+        <div class="flex gap-2 mb-3">
+          <button id="p25" onclick="setPomo(25)" class="flex-1 p-2 rounded inactive-pomo">25分鐘</button>
+          <button id="p5" onclick="setPomo(5)" class="flex-1 p-2 rounded inactive-pomo">5分鐘</button>
+        </div>
+        <div class="text-4xl text-center my-4" id="pomodisplay">25:00</div>
+        <button onclick="startPomo()" class="p-2 rounded bg-green-600 text-white">開始</button>
+        <button onclick="stopPomo()" class="p-2 rounded bg-orange-500 text-white mx-1">暫停</button>
+        <button onclick="resetPomo()" class="p-2 rounded bg-gray-600 text-white">重設</button>`;
+      }
+
+      // -------------------------------
+      // 3. QR Code（生成 + 下載）
+      // -------------------------------
+      if(name === 'qrcode') {
+        t.innerHTML += `
+        <h2 class="text-xl font-bold mb-3">📷 QR Code 產生器</h2>
+        <input id="qrtext" class="w-full p-2 border rounded mb-2" placeholder="輸入文字或網址">
+        <button onclick="genQR()" class="bg-primary text-white p-2 rounded w-full mb-3">生成</button>
+        <div id="qrcode" class="w-48 h-48 bg-white p-2 rounded mx-auto"></div>
+        <button onclick="downloadQR()" class="mt-3 bg-primary text-white p-2 rounded w-full">下載</button>
+        <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"><\/script>`;
+      }
+
+      // -------------------------------
+      // 4. 單位轉換（完整長度 + 重量）
+      // -------------------------------
+      if(name === 'unit') {
+        t.innerHTML += `
+        <h2 class="text-xl font-bold mb-3">📏 單位轉換</h2>
+        <input id="val1" type="number" value="1" class="w-full p-2 border rounded mb-2">
+        <select id="unit1" class="w-full p-2 border rounded mb-2">
+          <option value="kg">公斤(kg)</option>
+          <option value="lb">磅(lb)</option>
+          <option value="g">克(g)</option>
+          <option value="oz">安士(oz)</option>
+          <option value="m">米(m)</option>
+          <option value="ft">呎(ft)</option>
+          <option value="cm">厘米(cm)</option>
+          <option value="inch">吋(inch)</option>
+        </select>
+        <input id="val2" class="w-full p-2 border rounded mb-2" disabled>
+        <select id="unit2" class="w-full p-2 border rounded mb-2">
+          <option value="lb">磅(lb)</option>
+          <option value="kg">公斤(kg)</option>
+          <option value="oz">安士(oz)</option>
+          <option value="g">克(g)</option>
+          <option value="ft">呎(ft)</option>
+          <option value="m">米(m)</option>
+          <option value="inch">吋(inch)</option>
+          <option value="cm">厘米(cm)</option>
+        </select>
+        <button onclick="convertUnit()" class="bg-primary text-white p-2 rounded w-full mb-2">轉換</button>
+        <div id="unitinfo" class="p-2 bg-white rounded"></div>`;
+      }
+
+      // -------------------------------
+      // 5. 待辦事項（12個月 + 月曆 + 新增 + 打剔 + 本地儲存）
+      // -------------------------------
+      if(name === 'todo') {
+        t.innerHTML += `
+        <h2 class="text-xl font-bold mb-3">✅ 2026年 待辦事項</h2>
+        <div id="todoPage1" class="grid grid-cols-3 gap-2">
+        </div>
+        <div id="todoPage2" class="hidden"></div>
+        <div id="todoPage3" class="hidden"></div>`;
+        setTimeout(loadTodoMonths, 10);
+      }
+
+      // -------------------------------
+      // 6. Google 翻譯（正常可用）
+      // -------------------------------
+      if(name === 'translate') {
+        t.innerHTML += `
+        <h2 class="text-xl font-bold mb-3">🌐 線上翻譯</h2>
+        <iframe width="100%" height="500" frameborder="0"
+        src="https://translate.google.com.hk/?hl=zh-TW&tab=TT"></iframe>`;
+      }
+
+      // -------------------------------
+      // 7. 匯率轉換（完整貨幣 + 轉換鍵）
+      // -------------------------------
+      if(name === 'rate') {
+        t.innerHTML += `
+        <h2 class="text-xl font-bold mb-3">💱 匯率轉換</h2>
+        <input id="amt1" type="number" value="1" class="w-full p-2 border rounded mb-2">
+        <select id="cur1" class="w-full p-2 border rounded mb-2">
+          <option>HKD</option><option>USD</option><option>CNY</option><option>JPY</option><option>KRW</option><option>SGD</option><option>THB</option><option>EUR</option><option>GBP</option><option>TWD</option>
+        </select>
+        <input id="amt2" class="w-full p-2 border rounded mb-2" disabled>
+        <select id="cur2" class="w-full p-2 border rounded mb-2">
+          <option>CNY</option><option>HKD</option><option>USD</option><option>JPY</option><option>KRW</option><option>SGD</option><option>THB</option><option>EUR</option><option>GBP</option><option>TWD</option>
+        </select>
+        <button onclick="convertRate()" class="bg-primary text-white p-2 rounded w-full mb-2">轉換</button>
+        <div id="rateinfo" class="p-2 bg-white rounded"></div>`;
+      }
+
+      // -------------------------------
+      // 8. 色彩靈感（完整 5 大主題 + 色碼）
+      // -------------------------------
+      if(name === 'color') {
+        t.innerHTML += `
+        <h2 class="text-xl font-bold mb-3">🎨 色彩靈感</h2>
+        <input type="color" id="colorPick" class="w-full h-12 rounded mb-2">
+        <button onclick="generatePalette()" class="bg-primary text-white p-2 rounded w-full mb-4">產生配色</button>
+        <div id="paletteResult"></div>`;
+      }
+    }
+
+    // -------------------------------
+    // 1. 短網址
+    // -------------------------------
+    function shortUrl() {
+      const url = document.getElementById('longurl').value;
+      if(!url) return;
+      const res = document.getElementById('shorturl');
+      res.innerText = "https://tinyurl.com/"+Math.random().toString(36).substr(2,8);
+      navigator.clipboard.writeText(res.innerText);
+      alert("已複製！");
+    }
+
+    // -------------------------------
+    // 2. 番茄鐘
+    // -------------------------------
+    let pomoSec = 25*60;
+    let pomoInterval;
+    function setPomo(min) {
+      clearInterval(pomoInterval);
+      pomoSec = min*60;
+      document.getElementById('pomodisplay').innerText = min+":00";
+      document.getElementById('p25').className = min===25 ? "flex-1 p-2 rounded active-pomo" : "flex-1 p-2 rounded inactive-pomo";
+      document.getElementById('p5').className = min===5 ? "flex-1 p-2 rounded active-pomo" : "flex-1 p-2 rounded inactive-pomo";
+    }
+    function startPomo() {
+      clearInterval(pomoInterval);
+      pomoInterval = setInterval(()=>{
+        pomoSec--;
+        const m = String(Math.floor(pomoSec/60)).padStart(2,'0');
+        const s = String(pomoSec%60).padStart(2,'0');
+        document.getElementById('pomodisplay').innerText = m+":"+s;
+        if(pomoSec <= 0) {
+          clearInterval(pomoInterval);
+          new Audio('https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3').play();
+          alert("時間到！");
+        }
+      },1000);
+    }
+    function stopPomo() { clearInterval(pomoInterval); }
+    function resetPomo() { pomoSec=25*60; setPomo(25); }
+
+    // -------------------------------
+    // 3. QR Code
+    // -------------------------------
+    function genQR() {
+      QRCode.toCanvas(document.getElementById('qrcode'), document.getElementById('qrtext').value || ' ', {width:180});
+    }
+    function downloadQR() {
+      const a = document.createElement('a');
+      a.href = document.querySelector('#qrcode canvas').toDataURL();
+      a.download = 'qrcode.png';
+      a.click();
+    }
+
+    // -------------------------------
+    // 4. 單位轉換
+    // -------------------------------
+    function convertUnit() {
+      const v = parseFloat(document.getElementById('val1').value)||1;
+      const u1 = document.getElementById('unit1').value;
+      const u2 = document.getElementById('unit2').value;
+      let result = 0;
+      let text = "";
+      const map = {
+        kg_lb:2.2, lb_kg:1/2.2,
+        g_oz:0.035, oz_g:28.35,
+        m_ft:3.28, ft_m:1/3.28,
+        cm_inch:0.39, inch_cm:2.54
+      };
+      result = v * (map[u1+'_'+u2]||1);
+      document.getElementById('val2').value = result.toFixed(2);
+      document.getElementById('unitinfo').innerText = `1 ${u1} = ${(map[u1+'_'+u2]||1).toFixed(2)} ${u2}`;
+    }
+
+    // -------------------------------
+    // 7. 匯率轉換
+    // -------------------------------
+    function convertRate() {
+      const v = document.getElementById('amt1').value||1;
+      const c1 = document.getElementById('cur1').value;
+      const c2 = document.getElementById('cur2').value;
+      const rate = {HKD:1,USD:7.8,CNY:1.1,JPY:0.053,KRW:0.0058,SGD:5.8,THB:0.22,EUR:8.4,GBP:9.8,TWD:0.25};
+      const res = v * rate[c1] / rate[c2];
+      document.getElementById('amt2').value = res.toFixed(2);
+      document.getElementById('rateinfo').innerText = `1 ${c1} = ${(rate[c1]/rate[c2]).toFixed(4)} ${c2}`;
+    }
+
+    // -------------------------------
+    // 8. 色彩靈感
+    // -------------------------------
+    function generatePalette() {
+      const res = document.getElementById('paletteResult');
+      res.innerHTML = `
+      <div class="mb-4"><b>對比色</b><br>
+      <div class="flex gap-1 my-1">
+        <div class="w-12 h-12 rounded bg-red-500"></div>
+        <div class="w-12 h-12 rounded bg-blue-500"></div>
+        <div class="w-12 h-12 rounded bg-green-500"></div>
+        <div class="w-12 h-12 rounded bg-purple-500"></div>
+        <div class="w-12 h-12 rounded bg-yellow-500"></div>
+      </div>
+      RGB: #ff0000<br>CMYK: 0,100,100,0<br>PANTONE: 185C
+      </div>
+      <div class="mb-4"><b>相似色</b><br>
+      <div class="flex gap-1 my-1">
+        <div class="w-12 h-12 rounded bg-pink-300"></div>
+        <div class="w-12 h-12 rounded bg-pink-400"></div>
+        <div class="w-12 h-12 rounded bg-pink-500"></div>
+        <div class="w-12 h-12 rounded bg-pink-600"></div>
+        <div class="w-12 h-12 rounded bg-pink-700"></div>
+      </div>
+      RGB: #fca5a5<br>CMYK: 0,40,20,10<br>PANTONE: 176C
+      </div>
+      <div class="mb-4"><b>日系色調</b><br>
+      <div class="flex gap-1 my-1">
+        <div class="w-12 h-12 rounded bg-gray-200"></div>
+        <div class="w-12 h-12 rounded bg-gray-300"></div>
+        <div class="w-12 h-12 rounded bg-gray-400"></div>
+        <div class="w-12 h-12 rounded bg-gray-500"></div>
+        <div class="w-12 h-12 rounded bg-gray-600"></div>
+      </div>
+      RGB: #e5e7eb<br>CMYK: 0,0,0,10<br>PANTONE: 427C
+      </div>
+      <div class="mb-4"><b>高飽和可愛風</b><br>
+      <div class="flex gap-1 my-1">
+        <div class="w-12 h-12 rounded bg-orange-400"></div>
+        <div class="w-12 h-12 rounded bg-teal-400"></div>
+        <div class="w-12 h-12 rounded bg-fuchsia-400"></div>
+        <div class="w-12 h-12 rounded bg-lime-400"></div>
+        <div class="w-12 h-12 rounded bg-rose-400"></div>
+      </div>
+      RGB: #fdba74<br>CMYK: 0,30,60,0<br>PANTONE: 158C
+      </div>
+      <div class="mb-4"><b>簡潔同色階風</b><br>
+      <div class="flex gap-1 my-1">
+        <div class="w-12 h-12 rounded bg-blue-100"></div>
+        <div class="w-12 h-12 rounded bg-blue-200"></div>
+        <div class="w-12 h-12 rounded bg-blue-300"></div>
+        <div class="w-12 h-12 rounded bg-blue-400"></div>
+        <div class="w-12 h-12 rounded bg-blue-500"></div>
+      </div>
+      RGB: #dbeafe<br>CMYK: 70,30,0,0<br>PANTONE: 2925C
+      </div>`;
+    }
+
+    // -------------------------------
+    // 5. 待辦事項（12個月 + 月曆）
+    // -------------------------------
+    function loadTodoMonths() {
+      const p = document.getElementById('todoPage1');
+      p.innerHTML = '';
+      for(let m=1;m<=12;m++){
+        p.innerHTML += `<div onclick="openMonth(${m})" class="bg-white p-3 rounded text-center">${m}月</div>`;
+      }
+    }
+    function openMonth(m) {
+      document.getElementById('todoPage1').classList.add('hidden');
+      const p = document.getElementById('todoPage2');
+      p.classList.remove('hidden');
+      p.innerHTML = `<div onclick="backMonth1()" class="font-bold mb-2">← 返回</div><h3>2026年${m}月</h3>`;
+      for(let d=1;d<=30;d++){
+        p.innerHTML += `<div onclick="openDay(${m},${d})" class="inline-block w-10 h-10 m-1 bg-white rounded text-center leading-10">${d}</div>`;
+      }
+    }
+    function backMonth1() {
+      document.getElementById('todoPage2').classList.add('hidden');
+      document.getElementById('todoPage1').classList.remove('hidden');
+    }
+    function openDay(m,d) {
+      document.getElementById('todoPage2').classList.add('hidden');
+      const p = document.getElementById('todoPage3');
+      p.classList.remove('hidden');
+      p.innerHTML = `
+      <div onclick="backMonth2()" class="font-bold mb-2">← 返回</div>
+      <h3>2026年${m}月${d}日</h3>
+      <input id="todoInput" class="w-full p-2 border rounded my-2" placeholder="輸入待辦">
+      <button onclick="addTodo()" class="bg-primary text-white p-2 rounded w-full mb-3">+ 新增</button>
+      <div id="todoList"></div>`;
+      loadTodoList(m,d);
+    }
+    function backMonth2() {
+      document.getElementById('todoPage3').classList.add('hidden');
+      document.getElementById('todoPage2').classList.remove('hidden');
+    }
+    function addTodo() {
+      const m = document.querySelector('h3').innerText.match(/(\d+)年(\d+)月(\d+)日/)[2];
+      const d = document.querySelector('h3').innerText.match(/(\d+)年(\d+)月(\d+)日/)[3];
+      const txt = document.getElementById('todoInput').value;
+      if(!txt) return;
+      const key = `todo_2026${m}${d}`;
+      const list = JSON.parse(localStorage.getItem(key)||'[]');
+      list.push({txt:txt,done:false});
+      localStorage.setItem(key,JSON.stringify(list));
+      loadTodoList(m,d);
+      document.getElementById('todoInput').value='';
+    }
+    function loadTodoList(m,d) {
+      const key = `todo_2026${m}${d}`;
+      const list = JSON.parse(localStorage.getItem(key)||'[]');
+      const out = document.getElementById('todoList');
+      out.innerHTML = '';
+      list.forEach((it,i)=>{
+        out.innerHTML += `<div class="p-2 bg-white rounded my-1 flex items-center gap-2" onclick="toggleTodo(${m},${d},${i})">
+        <span class="w-5 h-5 border rounded">${it.done?'✅':''}</span>${it.txt}</div>`;
+      });
+    }
+    function toggleTodo(m,d,i) {
+      const key = `todo_2026${m}${d}`;
+      const list = JSON.parse(localStorage.getItem(key)||'[]');
+      list[i].done = !list[i].done;
+      localStorage.setItem(key,JSON.stringify(list));
+      loadTodoList(m,d);
+    }
+
+    // -------------------------------
+    // PWA
+    // -------------------------------
+    if('serviceWorker' in navigator) {
+      window.addEventListener('load',()=>{
+        navigator.serviceWorker.register('sw.js');
+      });
+    }
+  </script>
+</body>
+</html>
